@@ -7,6 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 </head>
 <body>
     <!-- Preloader -->
@@ -28,11 +29,6 @@
                 <a href="#gallery" class="nav-link" data-i18n="nav.gallery">Gallery</a>
                 <a href="#about" class="nav-link" data-i18n="nav.about">About</a>
                 <a href="#contact" class="nav-link" data-i18n="nav.contact">Contact</a>
-                <div class="lang-switcher-mobile">
-                    <button id="lang-en-mobile" onclick="setLanguage('en')" class="lang-btn-mobile active" aria-label="Switch to English">🇬🇧 EN</button>
-                    <span class="lang-divider">|</span>
-                    <button id="lang-de-mobile" onclick="setLanguage('de')" class="lang-btn-mobile" aria-label="Zu Deutsch wechseln">🇩🇪 DE</button>
-                </div>
             </div>
             <div class="lang-switcher">
                 <button id="lang-en" onclick="setLanguage('en')" class="lang-btn active" aria-label="Switch to English">🇬🇧 EN</button>
@@ -61,7 +57,7 @@
                 <a href="#contact" class="cta-button" data-i18n="hero.cta">Get in Touch</a>
             </div>
             <div class="hero-image">
-                <img src="https://picsum.photos/seed/hero/600/400" alt="Adel Sibachir">
+                <img src="my-photo.jpg" alt="Adel Sibachir">
                 <div class="particle-bg" id="particle-bg"></div>
             </div>
         </div>
@@ -164,6 +160,15 @@
                     <span data-i18n="stats.people">People Helped</span>
                 </div>
             </div>
+        </div>
+    </section>
+
+    <!-- Map Section -->
+    <section id="map">
+        <div class="container">
+            <h2 data-i18n="map.title">My Volunteer Map</h2>
+            <p class="map-subtitle" data-i18n="map.subtitle">Places where I made a difference across Algeria's coastal wilayas</p>
+            <div id="volunteer-map"></div>
         </div>
     </section>
 
@@ -662,12 +667,52 @@
         }
         .hero-image {
             position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
         .hero-image img {
-            width: 100%;
-            max-width: 400px;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            width: 350px;
+            height: 350px;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 3px solid var(--accent-green);
+            box-shadow: 0 0 30px rgba(0,255,136,0.4),
+                        0 0 60px rgba(0,255,136,0.2),
+                        0 0 100px rgba(0,255,136,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .hero-image img:hover {
+            transform: scale(1.03);
+            box-shadow: 0 0 40px rgba(0,255,136,0.6),
+                        0 0 80px rgba(0,255,136,0.3);
+        }
+        .hero-image::before {
+            content: '';
+            position: absolute;
+            width: 370px;
+            height: 370px;
+            border-radius: 50%;
+            border: 2px dashed rgba(0,255,136,0.3);
+            animation: rotate 10s linear infinite;
+        }
+        .hero-image::after {
+            content: '';
+            position: absolute;
+            width: 390px;
+            height: 390px;
+            border-radius: 50%;
+            border: 1px dashed rgba(0,136,255,0.2);
+            animation: rotate 15s linear infinite reverse;
+        }
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to   { transform: rotate(360deg); }
+        }
+        .light-theme .hero-image img {
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 30px rgba(0,136,255,0.4),
+                        0 0 60px rgba(0,136,255,0.2);
         }
         .particle-bg {
             position: absolute;
@@ -1448,12 +1493,167 @@
                 opacity: 0;
             }
         }
+        /* Map Styles */
+        #volunteer-map {
+            width: 100%;
+            height: 500px;
+            border-radius: 16px;
+            border: 1px solid rgba(0,255,136,0.2);
+            box-shadow: 0 0 30px rgba(0,255,136,0.1);
+            overflow: hidden;
+            margin-top: 2rem;
+        }
+        .map-subtitle {
+            text-align: center;
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+        }
+        /* Custom Marker Styles */
+        .custom-marker {
+            background: none;
+            border: none;
+        }
+        .marker-pin {
+            position: relative;
+            width: 30px;
+            height: 30px;
+        }
+        .marker-dot {
+            width: 12px;
+            height: 12px;
+            background: #00ff88;
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 10px #00ff88, 0 0 20px #00ff88;
+            z-index: 2;
+        }
+        .marker-pulse {
+            width: 30px;
+            height: 30px;
+            background: rgba(0, 255, 136, 0.2);
+            border: 2px solid rgba(0, 255, 136, 0.6);
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation: pulse 2s ease-out infinite;
+            z-index: 1;
+        }
+        @keyframes pulse {
+            0% {
+                transform: translate(-50%, -50%) scale(0.5);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(2.5);
+                opacity: 0;
+            }
+        }
+        /* Leaflet Popup Styles */
+        .leaflet-popup-content-wrapper {
+            background: #1a1a24 !important;
+            border: 1px solid rgba(0,255,136,0.3) !important;
+            border-radius: 12px !important;
+            box-shadow: 0 0 20px rgba(0,255,136,0.2) !important;
+            color: #fff !important;
+            padding: 0 !important;
+        }
+        .leaflet-popup-tip {
+            background: #1a1a24 !important;
+            border: none !important;
+        }
+        .leaflet-popup-content {
+            margin: 12px !important;
+            font-size: 0.9rem !important;
+        }
+        .map-popup h3 {
+            color: #00ff88;
+            margin: 0 0 8px 0;
+            font-size: 1rem;
+        }
+        .popup-badge {
+          display: inline-block;
+          background: rgba(0,255,136,0.15);
+          color: #00ff88;
+          border: 1px solid rgba(0,255,136,0.3);
+          padding: 3px 10px;
+          border-radius: 20px;
+          font-size: 0.78rem;
+          margin: 6px 0 10px 0;
+        }
+        .popup-list {
+          list-style: none;
+          padding: 0;
+          margin: 0;
+        }
+        .popup-list li {
+          color: #d0d0e8;
+          font-size: 0.8rem;
+          padding: 4px 0;
+          border-bottom: 1px solid rgba(255,255,255,0.05);
+          line-height: 1.4;
+        }
+        .popup-list li:last-child {
+          border-bottom: none;
+        }
+        /* Leaflet Control Styles */
+        .leaflet-control-zoom {
+            border-radius: 8px !important;
+            border: 1px solid rgba(0,255,136,0.2) !important;
+            background: rgba(26, 26, 36, 0.95) !important;
+        }
+        .leaflet-control-zoom-in, .leaflet-control-zoom-out {
+            color: #00ff88 !important;
+            font-weight: 700 !important;
+        }
+        .leaflet-control-zoom-in:hover, .leaflet-control-zoom-out:hover {
+            background: rgba(0,255,136,0.1) !important;
+        }
         @keyframes langFadeIn {
             from { opacity: 0; transform: translateY(4px); }
             to   { opacity: 1; transform: translateY(0); }
         }
+        /* Light mode map styles */
+        body.light-theme .leaflet-popup-content-wrapper {
+            background: #ffffff !important;
+            border: 1px solid rgba(0,0,0,0.1) !important;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15) !important;
+            color: #1a1a2e !important;
+        }
+        body.light-theme .leaflet-popup-tip {
+            background: #ffffff !important;
+        }
+        body.light-theme .map-popup h3 {
+            color: #0066cc;
+        }
+        body.light-theme .popup-badge {
+            background: rgba(0,100,200,0.1);
+            color: #0066cc;
+            border-color: rgba(0,100,200,0.3);
+        }
+        body.light-theme .popup-list li {
+            color: #333355;
+            border-bottom-color: rgba(0,0,0,0.06);
+        }
+        body.light-theme .marker-dot {
+            background: #0066cc;
+            box-shadow: 0 0 10px #0066cc, 0 0 20px #0066cc;
+        }
+        body.light-theme .marker-pulse {
+            background: rgba(0,100,200,0.15);
+            border-color: rgba(0,100,200,0.5);
+        }
+        body.light-theme #volunteer-map {
+            border-color: rgba(0,100,200,0.2);
+            box-shadow: 0 0 30px rgba(0,100,200,0.08);
+        }
     </style>
 
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
         // Translations object
         const translations = {
@@ -1494,6 +1694,10 @@
                     projects: "Projects Completed",
                     orgs: "Organizations",
                     people: "People Helped"
+                },
+                map: {
+                    title: "My Volunteer Map",
+                    subtitle: "14 Coastal Wilayas"
                 },
                 video: {
                     title: "My Video",
@@ -1582,6 +1786,10 @@
                     projects: "Abgeschlossene Projekte",
                     orgs: "Organisationen",
                     people: "Geholfen Menschen"
+                },
+                map: {
+                    title: "Meine Freiwilligenkarte",
+                    subtitle: "14 Küstenwilayas"
                 },
                 video: {
                     title: "Mein Video",
@@ -1748,6 +1956,234 @@
             }
         }
         createParticles();
+
+        // Map initialization
+        const volunteerLocations = [
+  {
+    name: "El Tarf",
+    coords: [36.7673, 8.3131],
+    activity: "Karawane des Glücks — Betreuung von Menschen mit eingeschränkter Mobilität",
+    org: "Nationale Vereinigung der Freiwilligen Algeriens (Dzayer Benevole)",
+    year: "2025"
+  },
+  {
+    name: "Annaba",
+    coords: [36.9000, 7.7667],
+    activity: "Karawane des Glücks — Betreuung von Menschen mit eingeschränkter Mobilität",
+    org: "Nationale Vereinigung der Freiwilligen Algeriens (Dzayer Benevole)",
+    year: "2025"
+  },
+  {
+    name: "Skikda",
+    coords: [36.8762, 6.9057],
+    activity: "Karawane des Glücks — Betreuung von Menschen mit eingeschränkter Mobilität",
+    org: "Nationale Vereinigung der Freiwilligen Algeriens (Dzayer Benevole)",
+    year: "2025"
+  },
+  {
+    name: "Jijel",
+    coords: [36.8200, 5.7658],
+    activity: "Karawane des Glücks — Betreuung von Menschen mit eingeschränkter Mobilität",
+    org: "Nationale Vereinigung der Freiwilligen Algeriens (Dzayer Benevole)",
+    year: "2025"
+  },
+  {
+    name: "Béjaïa",
+    coords: [36.7515, 5.0564],
+    activity: "Karawane des Glücks — Betreuung von Menschen mit eingeschränkter Mobilität",
+    org: "Nationale Vereinigung der Freiwilligen Algeriens (Dzayer Benevole)",
+    year: "2025"
+  },
+  {
+    name: "Tizi Ouzou",
+    coords: [36.7169, 4.0497],
+    activity: "Karawane des Glücks — Betreuung von Menschen mit eingeschränkter Mobilität",
+    org: "Nationale Vereinigung der Freiwilligen Algeriens (Dzayer Benevole)",
+    year: "2025"
+  },
+  {
+    name: "Boumerdès",
+    coords: [36.7367, 3.4775],
+    activity: "Karawane des Glücks — Betreuung von Menschen mit eingeschränkter Mobilität",
+    org: "Nationale Vereinigung der Freiwilligen Algeriens (Dzayer Benevole)",
+    year: "2025"
+  },
+  {
+    name: "Alger",
+    coords: [36.7538, 3.0588],
+    activity: "Karawane des Glücks — Betreuung von Menschen mit eingeschränkter Mobilität",
+    org: "Nationale Vereinigung der Freiwilligen Algeriens (Dzayer Benevole)",
+    year: "2025"
+  },
+  {
+    name: "Tipaza",
+    coords: [36.5911, 2.4477],
+    activity: "Karawane des Glücks — Betreuung von Menschen mit eingeschränkter Mobilität",
+    org: "Nationale Vereinigung der Freiwilligen Algeriens (Dzayer Benevole)",
+    year: "2025"
+  },
+  {
+    name: "Chlef",
+    coords: [36.1650, 1.3317],
+    activity: "Karawane des Glücks — Betreuung von Menschen mit eingeschränkter Mobilität",
+    org: "Nationale Vereinigung der Freiwilligen Algeriens (Dzayer Benevole)",
+    year: "2025"
+  },
+  {
+    name: "Mostaganem",
+    coords: [35.9311, 0.0890],
+    activity: "Karawane des Glücks — Betreuung von Menschen mit eingeschränkter Mobilität",
+    org: "Nationale Vereinigung der Freiwilligen Algeriens (Dzayer Benevole)",
+    year: "2025"
+  },
+  {
+    name: "Oran",
+    coords: [35.6969, -0.6331],
+    activity: "Karawane des Glücks — Betreuung von Menschen mit eingeschränkter Mobilität",
+    org: "Nationale Vereinigung der Freiwilligen Algeriens (Dzayer Benevole)",
+    year: "2025"
+  },
+  {
+    name: "Aïn Témouchent",
+    coords: [35.2980, -1.1400],
+    activity: "Karawane des Glücks — Betreuung von Menschen mit eingeschränkter Mobilität",
+    org: "Nationale Vereinigung der Freiwilligen Algeriens (Dzayer Benevole)",
+    year: "2025"
+  },
+  {
+    name: "Tlemcen",
+    coords: [34.8828, -1.3167],
+    activity: "Karawane des Glücks — Betreuung von Menschen mit eingeschränkter Mobilität",
+    org: "Nationale Vereinigung der Freiwilligen Algeriens (Dzayer Benevole)",
+    year: "2025"
+  }
+];
+
+        let mapInitialized = false;
+        let volunteerMap = null;
+        let volunteerRoute = null;
+
+        function initializeMap() {
+            if (mapInitialized) return;
+            mapInitialized = true;
+
+            // Create map centered on Algeria
+            volunteerMap = L.map('volunteer-map').setView([28.0339, 1.6596], 5);
+
+            const darkTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; CARTO',
+                maxZoom: 19
+            });
+
+            const lightTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; CARTO',
+                maxZoom: 19
+            });
+
+            const isDark = !document.body.classList.contains('light-theme');
+            if (isDark) {
+                darkTiles.addTo(volunteerMap);
+            } else {
+                lightTiles.addTo(volunteerMap);
+            }
+
+            // Disable scroll zoom to prevent accidental zoom while scrolling page
+            volunteerMap.scrollWheelZoom.disable();
+
+            // Custom marker icon
+            const customIcon = L.divIcon({
+                className: 'custom-marker',
+                html: `<div class="marker-pin">
+                         <div class="marker-pulse"></div>
+                         <div class="marker-dot"></div>
+                       </div>`,
+                iconSize: [30, 30],
+                iconAnchor: [15, 15]
+            });
+
+            // Add markers for all locations
+            const allCoordinates = [];
+            volunteerLocations.forEach((location) => {
+                allCoordinates.push(location.coords);
+                const marker = L.marker(location.coords, { icon: customIcon }).addTo(volunteerMap);
+                
+                // Bind popup with location details
+                marker.bindPopup(`
+  <div class="map-popup">
+    <h3>📍 ${location.name}</h3>
+    <div class="popup-badge">🗓️ Juli – August 2025</div>
+    <ul class="popup-list">
+      <li>🤝 Ehrenamtliches Mitglied — Dzayer Benevole</li>
+      <li>🎠 Teilnahme an der „Karawane des Glücks"</li>
+      <li>♿ Betreuung von Menschen mit eingeschränkter Mobilität</li>
+      <li>🏊 Unterstützung bei Schwimmhilfen & Freizeitangeboten</li>
+      <li>🩺 Zusammenarbeit mit Ärzten & Rettungsteams</li>
+      <li>🌍 Förderung inklusiven Tourismus in Algerien</li>
+    </ul>
+  </div>
+`, { maxWidth: 300 });
+
+                // Bind tooltip with location name
+                marker.bindTooltip(location.name, { permanent: false, direction: 'top' });
+            });
+
+            // Draw animated connecting line
+            volunteerRoute = L.polyline(allCoordinates, {
+                color: '#00ff88',
+                weight: 2,
+                opacity: 0.5,
+                dashArray: '8, 12',
+                dashOffset: '0'
+            }).addTo(volunteerMap);
+
+            volunteerRoute.setStyle({
+                color: isDark ? '#00ff88' : '#0066cc',
+                opacity: isDark ? 0.5 : 0.6
+            });
+
+            // Animate the dashed line moving
+            function animateLine() {
+                let offset = 0;
+                setInterval(() => {
+                    offset = (offset - 1) % 20;
+                    volunteerRoute.setStyle({ dashOffset: String(offset) });
+                }, 50);
+            }
+            animateLine();
+        }
+
+        function swapMapTiles(isDarkMode) {
+            if (isDarkMode) {
+                volunteerMap.removeLayer(lightTiles);
+                if (!volunteerMap.hasLayer(darkTiles)) darkTiles.addTo(volunteerMap);
+            } else {
+                volunteerMap.removeLayer(darkTiles);
+                if (!volunteerMap.hasLayer(lightTiles)) lightTiles.addTo(volunteerMap);
+            }
+            // Also update route line color:
+            if (volunteerRoute) {
+                volunteerRoute.setStyle({
+                    color: isDarkMode ? '#00ff88' : '#0066cc',
+                    opacity: isDarkMode ? 0.5 : 0.6
+                });
+            }
+        }
+
+        // Use Intersection Observer to initialize map when section scrolls into view
+        const mapSection = document.getElementById('map');
+        if (mapSection) {
+            const mapObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting && !mapInitialized) {
+                        initializeMap();
+                        if (volunteerMap) {
+                            volunteerMap.flyTo([28.0339, 1.6596], 5, { duration: 1.5 });
+                        }
+                    }
+                });
+            }, { threshold: 0.3 });
+            mapObserver.observe(mapSection);
+        }
 
         // Sticky navbar
         const navbar = document.getElementById('navbar');
@@ -2008,6 +2444,7 @@
             const isLight = body.classList.contains('light-theme');
             themeToggle.innerHTML = isLight ? '🌙' : '☀️';
             localStorage.setItem('theme', isLight ? 'light' : 'dark');
+            if (volunteerMap) swapMapTiles(!isLight);
         });
         // Load saved theme
         const savedTheme = localStorage.getItem('theme');
